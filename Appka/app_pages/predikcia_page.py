@@ -7,7 +7,8 @@ import plotly.express as px
 from statsmodels.tsa.arima.model import ARIMA
 from statsmodels.tsa.stattools import adfuller
 
-df = pd.read_csv("dataset.csv")
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+df = pd.read_csv(os.path.join(BASE_DIR, "..", "dataset.csv"))
 
 df_melted = df.melt(id_vars = ["region", "pohlavie","typ_skupiny", "skupina"], var_name = "rok", value_name = "nezamestnanost")
 df_melted["rok"] = df_melted["rok"].astype(int)
