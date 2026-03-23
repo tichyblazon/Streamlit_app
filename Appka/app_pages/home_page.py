@@ -5,7 +5,7 @@ import plotly.express as px
 import os
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-df = pd.read_csv(os.path.join(BASE_DIR, "dataset.csv"))
+df = pd.read_csv(os.path.join(BASE_DIR, "..", "dataset.csv"))
 
 #z wide formatu na long format
 df_melted = df.melt(id_vars = ["region", "pohlavie","typ_skupiny", "skupina"], var_name = "rok", value_name = "nezamestnanost")
