@@ -3,6 +3,7 @@ import pandas as pd
 import numpy as np
 #import matplotlib.pyplot as plt
 import plotly.express as px
+import os
 
 from statsmodels.tsa.arima.model import ARIMA
 from statsmodels.tsa.stattools import adfuller
