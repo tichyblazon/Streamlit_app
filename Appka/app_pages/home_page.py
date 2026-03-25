@@ -62,10 +62,18 @@ filtered_df_odvetvie = df_odvetvie[
 
 ###
 #MAIN    
-st.write(df_odvetvie.head())
+
 #STATISTIKY
 #1 statistika
-najhorsi_region = filtered_df.groupby("region")["nezamestnanost"].mean().idxmax()
+if filtered_df.empty:
+    najhorsi_region = "N/A"
+    gender_gap = "N/A"
+    st.warning("Žiadne dáta pre zvolené filtre, vyber iné parametre", icon="⚠️")
+else:
+    najhorsi_region = filtered_df.groupby("region")["nezamestnanost"].mean().idxmax()
+    muzi_mean = filtered_df[filtered_df["pohlavie"] == "Muži"]["nezamestnanost"].mean()
+    zeny_mean = filtered_df[filtered_df["pohlavie"] == "Ženy"]["nezamestnanost"].mean()
+    gender_gap = (muzi_mean - zeny_mean)/100
 
 #2 statistika
 df_sr_vek = df[(df["region"] == "Slovenská republika") & 
@@ -73,15 +81,12 @@ df_sr_vek = df[(df["region"] == "Slovenská republika") &
                ].drop(columns=["region", "typ_skupiny", "pohlavie", "skupina"]).mean().iloc[::-1]
 
 #3 statistika gender gap
-muzi_mean = filtered_df[filtered_df["pohlavie"] == "Muži"]["nezamestnanost"].mean()
-zeny_mean = filtered_df[filtered_df["pohlavie"] == "Ženy"]["nezamestnanost"].mean()
-gender_gap = (muzi_mean - zeny_mean)/100
 
-
-col1, col2, col3 = st.columns(3)
-col1.metric(label = "Region s najväčšou nezamestnanosťou", value = najhorsi_region, border=True)
-col2.metric(label = "Priemerná Nezamestnanost v priebehu rokov na Slovensku na základe veku", value = "2005 - 2025", chart_data=df_sr_vek, chart_type="line", border=True) #nejako pospekulovat
-col3.metric(label = "Gender gap", value = gender_gap, border=True, format = "percent")
+with st.expander("Štatistiky"):
+    col1, col2, col3 = st.columns(3)
+    col1.metric(label = "Region s najväčšou nezamestnanosťou", value = najhorsi_region, border=True)
+    col2.metric(label = "Priemerná Nezamestnanost v priebehu rokov na Slovensku na základe veku", value = "2005 - 2025", chart_data=df_sr_vek, chart_type="line", border=True) #nejako pospekulovat
+    col3.metric(label = "Gender gap", value = gender_gap, border=True, format = "percent")
 
 #tu je error ked je nan hodnota a vyriesit tie 2020,5 a 2021,5 v datasetu, kedze su to priemery a nie realne roky, tak ich nahradit za 2020 a 2021, to sa da v update_layout urobit, ale skaredo to ukazuje grafy
 
@@ -134,13 +139,16 @@ st.divider()
 st.subheader("Nezamestnanosť podľa odvetvia")
 st.caption("Analýza Nezamestnanosti na Slovensku v rokoch 2008–2025 podľa pohlavia a odvetvia")
 
-col1, col2, col3 = st.columns(3)
-col1.metric(label = "Region s najväčšou nezamestnanosťou", value = najhorsi_region, border=True)
-col2.metric(label = "Priemerná Nezamestnanost v priebehu rokov na Slovensku na základe veku", value = "2005 - 2025", chart_data=df_sr_vek, chart_type="line", border=True) #nejako pospekulovat
-col3.metric(label = "Gender gap", value = gender_gap, border=True, format = "percent")
+najhorsie_odvetvie = filtered_df_odvetvie.groupby("Odvetvie")["Hodnota"].mean().idxmax()
+with st.expander( "Štatistiky"):
+    col1, col2, col3 = st.columns(3)
+    col1.metric(label = "Odvetvie najväčšou nezamestnanosťou", value = najhorsie_odvetvie, border=True)
+    col2.metric(label = "Priemerná Nezamestnanost v priebehu rokov na Slovensku na základe veku", value = "2005 - 2025", chart_data=df_sr_vek, chart_type="line", border=True) #nejako pospekulovat
+    col3.metric(label = "Gender gap", value = gender_gap, border=True, format = "percent")
 
 cols_graphs_third = st.columns(1)
 with cols_graphs_third[0]:
     line_graph = px.line(filtered_df_odvetvie, x="Rok", y="Hodnota", color="Odvetvie", line_dash="Pohlavie", color_discrete_sequence=px.colors.qualitative.Set3, facet_row="Pohlavie", facet_row_spacing= 0.2, title="Nezamestnanosť podľa odvetvia v priebehu rokov")
     line_graph.update_layout(xaxis_title = "Roky", yaxis_title = "Nezamestnanosť")
+    line_graph.for_each_annotation(lambda a: a.update(text=a.text.split("=")[-1]))
     st.plotly_chart(line_graph)
