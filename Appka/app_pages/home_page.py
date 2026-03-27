@@ -82,7 +82,7 @@ else:
 with st.expander("Štatistiky"):
     col1, col2, col3 = st.columns(3)
     col1.metric(label = "Region s najvačším počtom nezamestnaných ľudí", value = najhorsi_region, border=True)
-    col2.metric(label = "Priemerný počet nezamestnaných ľudí v priebehu rokov na Slovensku na základe veku", value = "2005 - 2025", chart_data=df_sr_vek, chart_type="line", border=True) #nejako pospekulovat
+    col2.metric(label = "Priemerný počet nezamestnaných ľudí v tisícoch v priebehu rokov na Slovensku na základe veku", value = "2005 - 2025", chart_data=df_sr_vek, chart_type="line", border=True) #nejako pospekulovat
     if gender_gap == "Nie je možné určiť":
         col3.metric(label = "Gender gap", value=gender_gap, border=True)
     elif gender_gap > 0:
