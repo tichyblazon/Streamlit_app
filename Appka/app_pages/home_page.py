@@ -86,9 +86,9 @@ with st.expander("Štatistiky"):
     if gender_gap == "Nie je možné určiť":
         col3.metric(label = "Gender gap", value=gender_gap, border=True)
     elif gender_gap > 0:
-        col3.metric(label = "Mužov je viac nezamestnaných o", value=gender_gap, border=True)
+        col3.metric(label = "Priemerne Mužov je viac nezamestnaných o", value=gender_gap, border=True)
     elif gender_gap < 0:
-        col3.metric(label = "Žien je viac nezamestnaných o", value=gender_gap*(-1), border=True)
+        col3.metric(label = "Priemerne Žien je viac nezamestnaných o", value=gender_gap*(-1), border=True)
 
 #tu je error ked je nan hodnota a vyriesit tie 2020,5 a 2021,5 v datasetu, kedze su to priemery a nie realne roky, tak ich nahradit za 2020 a 2021, to sa da v update_layout urobit, ale skaredo to ukazuje grafy
 
@@ -171,9 +171,9 @@ with st.expander( "Štatistiky"):
     if gender_gap == "Nie je možné určiť":
         col3.metric(label = "Gender gap", value=gender_gap, border=True)
     elif gender_gap > 0:
-        col3.metric(label = "Mužov je viac nezamestnaných o", value=gender_gap, border=True)
+        col3.metric(label = "Priemerne Mužov je viac nezamestnaných o", value=gender_gap, border=True)
     elif gender_gap < 0:
-        col3.metric(label = "Žien je viac nezamestnaných o", value=gender_gap*(-1), border=True)
+        col3.metric(label = "Priemerne Žien je viac nezamestnaných o", value=gender_gap*(-1), border=True)
 
 #GRAFY 2 DATASET
 cols_graphs_third = st.columns(2)
