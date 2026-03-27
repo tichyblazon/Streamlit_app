@@ -43,7 +43,7 @@ filtered_df = df_melted[
 ]
 
 st.sidebar.divider()
-st.sidebar.header("Vyber si filtre pre druhy dataset")
+st.sidebar.header("Vyber si filtre pre druhý dataset")
 
 #filtre pre druhy dataset
 selected_pohlavie_odvetvie = st.sidebar.multiselect("Zvoľ si pohlavie", options=df_odvetvie["Pohlavie"].unique(), default=["Spolu"])
