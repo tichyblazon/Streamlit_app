@@ -23,7 +23,7 @@ df_sr = df_melted[df_melted["region"] == "Slovenská republika"]
 df_odvetvie["Hodnota"] = df_odvetvie["Hodnota"].str.replace(",", ".").replace("-", float("nan")).astype(float)
 
 #ZACIATOK sidebar 
-st.sidebar.header("Vyber si filter pre prvý dataset")
+st.sidebar.header("Vyber si filtre pre prvý dataset")
 
 selected_region = st.sidebar.multiselect("Zvoľ si región",options=df_melted["region"].unique(), default=df_sr["region"].unique())
 selected_pohlavie = st.sidebar.multiselect("Zvoľ si pohlavie",options=df_melted["pohlavie"].unique(), default=df_melted["pohlavie"].unique())
