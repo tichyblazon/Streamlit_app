@@ -27,13 +27,14 @@ st.sidebar.header("Vyber si filtre pre prvý dataset")
 
 selected_region = st.sidebar.multiselect("Zvoľ si región",options=df_melted["region"].unique(), default=df_sr["region"].unique())
 selected_pohlavie = st.sidebar.multiselect("Zvoľ si pohlavie",options=df_melted["pohlavie"].unique(), default=df_melted["pohlavie"].unique())
-selected_roky = st.sidebar.slider("Zvoľ si roky", min_value = df_melted["rok"].min(), max_value = df_melted["rok"].max(), value = (2005, 2025), step = 1)
 selected_typ = st.sidebar.selectbox("Zvoľ si typ skupiny",options=df_melted["typ_skupiny"].unique())
 if selected_typ == "Vek":
     selected_skupina = st.sidebar.multiselect("Zvoľ si vekovú skupinu", options=df_melted[df_melted["typ_skupiny"] == "Vek"]["skupina"].unique(), default=["25-34"])
     
 else:
     selected_skupina = st.sidebar.multiselect("Zvoľ si vzdelanie", options=df_melted[df_melted["typ_skupiny"] == "Vzdelanie"]["skupina"].unique(), default=["Vysokoškolské"])
+
+selected_roky = st.sidebar.slider("Zvoľ si roky", min_value = df_melted["rok"].min(), max_value = df_melted["rok"].max(), value = (2005, 2025), step = 1)
 
 filtered_df = df_melted[
     (df_melted["region"].isin(selected_region)) &
@@ -82,7 +83,7 @@ else:
 with st.expander("Štatistiky"):
     col1, col2, col3 = st.columns(3)
     col1.metric(label = "Region s najvačším počtom nezamestnaných ľudí", value = najhorsi_region, border=True)
-    col2.metric(label = "Priemerný počet nezamestnaných ľudí v tisícoch v priebehu rokov na Slovensku na základe veku", value = "2005 - 2025", chart_data=df_sr_vek, chart_type="line", border=True) #nejako pospekulovat
+    col2.metric(label = "Priemerný počet nezamestnaných ľudí v priebehu rokov na Slovensku na základe veku", value = "2005 - 2025", chart_data=df_sr_vek, chart_type="line", border=True) #nejako pospekulovat
     if gender_gap == "Nie je možné určiť":
         col3.metric(label = "Gender gap", value=gender_gap, border=True)
     elif gender_gap > 0:
@@ -108,7 +109,7 @@ with cols_graphs_first[0]:
     bar_graph_1 = px.bar(filtered_df, x="rok", y="Nezamestnaní v tisicoch", color="pohlavie", barmode= "group", color_discrete_sequence=px.colors.qualitative.Set3, title=bar_graph_title, hover_data=["skupina"], facet_col="region")
     #bar_graph_1.update_traces(marker_line_color="grey", marker_line_width=0.4)
     bar_graph_1.for_each_annotation(lambda a: a.update(text=a.text.split("=")[-1]))
-    st.plotly_chart(bar_graph_1)
+    st.plotly_chart(bar_graph_1, use_container_width=True)
 
 
 cols_graphs_second=st.columns(3)
@@ -117,21 +118,24 @@ with cols_graphs_second[0]:
     bar_graph_2 = px.bar(region_pohlavie_agg, x="region", y="Nezamestnaní v tisicoch", color="pohlavie", barmode= "group", color_discrete_sequence=px.colors.qualitative.Set3, title="Priemerná Nezamestnanosť v Regiónoch")
     bar_graph_2.update_layout(title = boxplot_title, xaxis_title = "Región", yaxis_title = "Nezamestnaní v tisicoch")
     bar_graph_1.update_traces(marker_line_color="grey", marker_line_width=0.4)
-    st.plotly_chart(bar_graph_2)
+    st.plotly_chart(bar_graph_2, use_container_width=True)
     
 with cols_graphs_second[1]:  
     boxplot_graph = px.box(filtered_df,x = "skupina", y = "Nezamestnaní v tisicoch", color = "pohlavie", color_discrete_sequence=px.colors.qualitative.Set3, facet_col="region", facet_col_spacing = 0.2, title=boxplot_title)
     boxplot_graph.update_layout(title = boxplot_title, yaxis_title = "Nezamestnaní v tisicoch")
     boxplot_graph.update_xaxes(title_text=skupina)
     boxplot_graph.for_each_annotation(lambda a: a.update(text=a.text.split("=")[-1]))
-    st.plotly_chart(boxplot_graph)
+    st.plotly_chart(boxplot_graph, use_container_width=True)
+
+
+agg_heatmap = round(filtered_df.groupby(["region", "skupina"], as_index=False)["Nezamestnaní v tisicoch"].mean(),2)
+pivot_heatmap = agg_heatmap.pivot(index="region", columns="skupina", values="Nezamestnaní v tisicoch")
 
 with cols_graphs_second[2]:
-    scatter = px.scatter(filtered_df, x = "rok", y = "skupina", color = "Nezamestnaní v tisicoch", color_discrete_sequence=px.colors.qualitative.Set3, size = "Nezamestnaní v tisicoch", title="Scatter")
-    scatter.update_layout(xaxis_title="Rok",  yaxis_title=skupina, title="Počet nezamestnaných ľudí podľa skupiny v priebehu rokov")
-    st.plotly_chart(scatter)
-    #tu hadze error ohladom nan hodnot pri vzdelani
-
+    heatmap = px.imshow(pivot_heatmap, color_continuous_scale="Bluyl", title="Priemerná nezamestnanosť podľa regiónu a skupiny", labels={"color": "Nezamestnaní v tisícoch", "x": skupina, "y": "Región"}, text_auto= True)
+    heatmap.update_traces(hovertemplate=None, hoverinfo="skip")
+    st.plotly_chart(heatmap, use_container_width=True)
+ 
 st.divider()
 
 ###
@@ -178,11 +182,12 @@ with st.expander( "Štatistiky"):
 #GRAFY 2 DATASET
 cols_graphs_third = st.columns(2)
 with cols_graphs_third[0]:
-    line_graph = px.line(filtered_df_odvetvie, x="Rok", y="Hodnota", color="Pohlavie", color_discrete_sequence=px.colors.qualitative.Set3, facet_row="Odvetvie", facet_row_spacing= 0.2, title="Nezamestnanosť podľa odvetvia v priebehu rokov")
-    line_graph.update_layout(xaxis_title = "Roky", yaxis_title = "Počet nezamestnaných v tisicoch")
+    line_graph = px.line(filtered_df_odvetvie, x="Rok", y="Hodnota", color="Odvetvie", line_dash= "Pohlavie", color_discrete_sequence=px.colors.qualitative.Set3, title="Nezamestnanosť podľa odvetvia v priebehu rokov")
+    line_graph.update_layout(xaxis_title = "Roky")
     line_graph.for_each_annotation(lambda a: a.update(text=a.text.split("=")[-1]))
-    #line_graph.update_yaxes(title_text="Počet nezamestnaných v tisícoch")
-    st.plotly_chart(line_graph)
+    line_graph.update_yaxes(title_text="Počet nezamestnaných v tisícoch")
+    st.plotly_chart(line_graph, use_container_width=True)
+#TODO PORIESIT ESTE TENTO GRAF HORE
 
 muzi_zeny_df_odvetvie = filtered_df_odvetvie[filtered_df_odvetvie["Pohlavie"] != "Spolu"]
 agg_radar = filtered_df_odvetvie.groupby(["Odvetvie", "Pohlavie"], as_index=False)["Hodnota"].mean()
@@ -191,8 +196,4 @@ with cols_graphs_third [1]:
     radar_graph = px.line_polar(agg_radar, r = "Hodnota", theta = "Odvetvie", line_close= True, color= "Pohlavie", color_discrete_sequence=px.colors.qualitative.Pastel, hover_data="Hodnota", title="Počet nezamestnaných v odvetviach")
     radar_graph.update_traces(fill = "toself")
     radar_graph.update_polars(bgcolor="#0e0e0e")
-    st.plotly_chart(radar_graph)
-
-
-#TODO
-#pridaj dalsie grafy, bar plot
+    st.plotly_chart(radar_graph, use_container_width=True)
