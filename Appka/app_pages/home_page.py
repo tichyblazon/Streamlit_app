@@ -63,8 +63,12 @@ if len(filtered_df[["region", "pohlavie", "skupina"]])<1:
     st.warning("Zvoľ si inú kombináciu filtrov")
 
 #STATISTIKY
-#1 statistika
-najhorsi_region = filtered_df.groupby("region")["Nezamestnaní v tisicoch"].mean().idxmax()
+#1 statistika 
+region_means = (filtered_df.groupby("region")["Nezamestnaní v tisicoch"].mean().dropna())
+if region_means.empty:
+    najhorsi_region = "Nie je možné určiť"
+else:
+    najhorsi_region = region_means.idxmax()
 
 
 #2 statistika
@@ -74,7 +78,7 @@ df_sr_vek = df[(df["region"] == "Slovenská republika") &
 
 #3 statistika gender gap
 if filtered_df[filtered_df["pohlavie"] == "Muži"].empty or filtered_df[filtered_df["pohlavie"] == "Ženy"].empty:
-    gender_gap = "Nie je možné určiť"
+    gender_gap = "Je potrebné zvoliť obe pohlavia"
 else:
     muzi_mean = filtered_df[filtered_df["pohlavie"] == "Muži"]["Nezamestnaní v tisicoch"].mean()
     zeny_mean = filtered_df[filtered_df["pohlavie"] == "Ženy"]["Nezamestnaní v tisicoch"].mean()
@@ -84,7 +88,7 @@ with st.expander("Štatistiky"):
     col1, col2, col3 = st.columns(3)
     col1.metric(label = "Region s najvačším počtom nezamestnaných ľudí", value = najhorsi_region, border=True)
     col2.metric(label = "Priemerný počet nezamestnaných ľudí v priebehu rokov na Slovensku na základe veku", value = "2005 - 2025", chart_data=df_sr_vek, chart_type="line", border=True) #nejako pospekulovat
-    if gender_gap == "Nie je možné určiť":
+    if gender_gap == "Je potrebné zvoliť obe pohlavia":
         col3.metric(label = "Gender gap", value=gender_gap, border=True)
     elif gender_gap > 0:
         col3.metric(label = "Priemerne Mužov je viac nezamestnaných o", value=gender_gap, border=True)
@@ -145,13 +149,13 @@ st.divider()
 st.subheader("Nezamestnanosť podľa odvetvia")
 st.caption("Interaktívna Analýza počtu nezamestnaných v rokoch 2008–2025 podľa pohlavia a odvetvia")
 
-#WARNING
-if len(filtered_df_odvetvie[["Pohlavie", "Odvetvie"]])<1:
+# WARNING + 1 statistika
+if filtered_df_odvetvie.empty:
     st.warning("Zvoľ si inú kombináciu filtrov")
-
-#STATISTIKY
-#1 statistika
-najhorsie_odvetvie = filtered_df_odvetvie.groupby("Odvetvie")["Hodnota"].mean().idxmax()
+    najhorsie_odvetvie = "Nie je možné určiť"
+else:
+    odvetvie_means = (filtered_df_odvetvie.groupby("Odvetvie")["Hodnota"].mean().dropna())
+    najhorsie_odvetvie = (odvetvie_means.idxmax() if not odvetvie_means.empty else "Nie je možné určiť")
 
 #2 statistika
 posledny_rok = selected_roky_odvetvie[1]
@@ -165,14 +169,14 @@ if "Muži" in selected_pohlavie_odvetvie and "Ženy" in selected_pohlavie_odvetv
     zeny_mean = filtered_df_odvetvie[filtered_df_odvetvie["Pohlavie"] == "Ženy"]["Hodnota"].mean()
     gender_gap = round((muzi_mean - zeny_mean)*1000)
 else:
-    gender_gap = "Nie je možné určiť"
+    gender_gap = "Je potrebné zvoliť obe pohlavia"
 
 with st.expander( "Štatistiky"):
     col1, col2, col3 = st.columns(3)
     col1.metric(label = "Odvetvie najväčšou nezamestnanosťou", value = najhorsie_odvetvie, border=True)
     col2.metric(label = "Rozdiel Posledného a predposledného roka", value = f"{predposledny_rok} - {posledny_rok}", delta = rozdiel, delta_color="inverse" ,border=True)
 
-    if gender_gap == "Nie je možné určiť":
+    if gender_gap == "Je potrebné zvoliť obe pohlavia":
         col3.metric(label = "Gender gap", value=gender_gap, border=True)
     elif gender_gap > 0:
         col3.metric(label = "Priemerne Mužov je viac nezamestnaných o", value=gender_gap, border=True)
@@ -187,7 +191,6 @@ with cols_graphs_third[0]:
     line_graph.for_each_annotation(lambda a: a.update(text=a.text.split("=")[-1]))
     line_graph.update_yaxes(title_text="Počet nezamestnaných v tisícoch")
     st.plotly_chart(line_graph, use_container_width=True)
-#TODO PORIESIT ESTE TENTO GRAF HORE
 
 muzi_zeny_df_odvetvie = filtered_df_odvetvie[filtered_df_odvetvie["Pohlavie"] != "Spolu"]
 agg_radar = filtered_df_odvetvie.groupby(["Odvetvie", "Pohlavie"], as_index=False)["Hodnota"].mean()
