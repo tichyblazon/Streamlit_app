@@ -17,15 +17,14 @@ df_odvetvie = pd.read_csv(os.path.join(BASE_DIR, "..", "dataset_odvetvie.csv"))
 #z wide formatu na long format
 df_melted = df.melt(id_vars = ["region", "pohlavie","typ_skupiny", "skupina"], var_name = "rok", value_name = "Nezamestnaní v tisicoch")
 df_melted["rok"] = df_melted["rok"].astype(int)
-df_sr = df_melted[df_melted["region"] == "Slovenská republika"]
 
-#desatinna ciarka v druhom datasete, nahradenie a pretypovaNie stlpca
+#desatinna ciarka v druhom datasete, nahradenie a pretypovanie stlpca
 df_odvetvie["Hodnota"] = df_odvetvie["Hodnota"].str.replace(",", ".").replace("-", float("nan")).astype(float)
 
 #ZACIATOK sidebar 
 st.sidebar.header("Vyber si filtre pre prvý dataset")
 
-selected_region = st.sidebar.multiselect("Zvoľ si región",options=df_melted["region"].unique(), default=df_sr["region"].unique())
+selected_region = st.sidebar.multiselect("Zvoľ si región",options=df_melted["region"].unique(), default=["Slovenská republika"])
 selected_pohlavie = st.sidebar.multiselect("Zvoľ si pohlavie",options=df_melted["pohlavie"].unique(), default=df_melted["pohlavie"].unique())
 selected_typ = st.sidebar.selectbox("Zvoľ si typ skupiny",options=df_melted["typ_skupiny"].unique())
 if selected_typ == "Vek":
@@ -47,7 +46,7 @@ st.sidebar.divider()
 st.sidebar.header("Vyber si filtre pre druhý dataset")
 
 #filtre pre druhy dataset
-selected_pohlavie_odvetvie = st.sidebar.multiselect("Zvoľ si pohlavie", options=df_odvetvie["Pohlavie"].unique(), default=["Spolu"])
+selected_pohlavie_odvetvie = st.sidebar.multiselect("Zvoľ si pohlavie", options=df_odvetvie[df_odvetvie["Pohlavie"] != "Spolu"]["Pohlavie"].unique(), default=["Muži", "Ženy"], key="pohlavie_odvetvie")
 selected_odvetvie = st.sidebar.multiselect("Zvoľ si odvetvie", options=df_odvetvie["Odvetvie"].unique(), default=["M Odborné, vedecké a technické činnosti"])
 selected_roky_odvetvie = st.sidebar.slider("Zvoľ si roky", min_value = df_odvetvie["Rok"].min(), max_value = df_odvetvie["Rok"].max(), value = (2008, 2025), step = 1)
 
@@ -64,12 +63,11 @@ if len(filtered_df[["region", "pohlavie", "skupina"]])<1:
 
 #STATISTIKY
 #1 statistika 
-region_means = (filtered_df.groupby("region")["Nezamestnaní v tisicoch"].mean().dropna())
-if region_means.empty:
-    najhorsi_region = "Nie je možné určiť"
+region_avg = (filtered_df.groupby("region")["Nezamestnaní v tisicoch"].mean().dropna())
+if region_avg.empty:
+    najhorsi_region = "Zvoľ aspoň jeden región"
 else:
-    najhorsi_region = region_means.idxmax()
-
+    najhorsi_region = region_avg.idxmax()
 
 #2 statistika
 df_sr_vek = df[(df["region"] == "Slovenská republika") & 
@@ -95,8 +93,6 @@ with st.expander("Štatistiky"):
     elif gender_gap < 0:
         col3.metric(label = "Priemerne Žien je viac nezamestnaných o", value=gender_gap*(-1), border=True)
 
-#tu je error ked je nan hodnota a vyriesit tie 2020,5 a 2021,5 v datasetu, kedze su to priemery a nie realne roky, tak ich nahradit za 2020 a 2021, to sa da v update_layout urobit, ale skaredo to ukazuje grafy
-
 #GRAFY 1 DATASET
 
 if selected_typ == "Vek":
@@ -111,9 +107,9 @@ else:
 cols_graphs_first = st.columns(1)
 with cols_graphs_first[0]:
     bar_graph_1 = px.bar(filtered_df, x="rok", y="Nezamestnaní v tisicoch", color="pohlavie", barmode= "group", color_discrete_sequence=px.colors.qualitative.Set3, title=bar_graph_title, hover_data=["skupina"], facet_col="region")
-    #bar_graph_1.update_traces(marker_line_color="grey", marker_line_width=0.4)
     bar_graph_1.for_each_annotation(lambda a: a.update(text=a.text.split("=")[-1]))
     st.plotly_chart(bar_graph_1, use_container_width=True)
+    bar_graph_1.update_xaxes(dtick=1, tickformat="d")
 
 
 cols_graphs_second=st.columns(3)
@@ -152,10 +148,10 @@ st.caption("Interaktívna Analýza počtu nezamestnaných v rokoch 2008–2025 p
 # WARNING + 1 statistika
 if filtered_df_odvetvie.empty:
     st.warning("Zvoľ si inú kombináciu filtrov")
-    najhorsie_odvetvie = "Nie je možné určiť"
+    najhorsie_odvetvie = "Zvoľ aspoň jeden región"
 else:
     odvetvie_means = (filtered_df_odvetvie.groupby("Odvetvie")["Hodnota"].mean().dropna())
-    najhorsie_odvetvie = (odvetvie_means.idxmax() if not odvetvie_means.empty else "Nie je možné určiť")
+    najhorsie_odvetvie = (odvetvie_means.idxmax() if not odvetvie_means.empty else "Zvoľ aspoň jeden región")
 
 #2 statistika
 posledny_rok = selected_roky_odvetvie[1]
