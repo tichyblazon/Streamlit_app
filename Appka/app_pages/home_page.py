@@ -184,19 +184,22 @@ with st.expander( "Štatistiky"):
         col3.metric(label = "Priemerne Žien je viac nezamestnaných o", value=gender_gap*(-1), border=True)
 
 #GRAFY 2 DATASET
-cols_graphs_third = st.columns(2)
+cols_graphs_third = st.columns(1)
 with cols_graphs_third[0]:
-    line_graph = px.line(filtered_df_odvetvie, x="Rok", y="Hodnota", color="Odvetvie", line_dash= "Pohlavie", color_discrete_sequence=px.colors.qualitative.Set3, title="Nezamestnanosť podľa odvetvia v priebehu rokov")
+    line_graph = px.line(filtered_df_odvetvie, x="Rok", y="Hodnota", color="Pohlavie", line_dash= "Odvetvie", color_discrete_sequence=px.colors.qualitative.Set3, title="Počet Nezamestnanosých podľa odvetvia v priebehu rokov")
     line_graph.update_layout(xaxis_title = "Roky")
     line_graph.for_each_annotation(lambda a: a.update(text=a.text.split("=")[-1]))
     line_graph.update_yaxes(title_text="Počet nezamestnaných v tisícoch")
+    line_graph.update_xaxes(dtick=1, tickformat="d")
     st.plotly_chart(line_graph, use_container_width=True)
 
-muzi_zeny_df_odvetvie = filtered_df_odvetvie[filtered_df_odvetvie["Pohlavie"] != "Spolu"]
-agg_radar = filtered_df_odvetvie.groupby(["Odvetvie", "Pohlavie"], as_index=False)["Hodnota"].mean()
+cols_graphs_forth = st.columns(1)
+with cols_graphs_third[0]:
+    muzi_zeny_df_odvetvie = filtered_df_odvetvie[filtered_df_odvetvie["Pohlavie"] != "Spolu"]
+    agg_radar = filtered_df_odvetvie.groupby(["Odvetvie", "Pohlavie"], as_index=False)["Hodnota"].mean()
 
-with cols_graphs_third [1]:
     radar_graph = px.line_polar(agg_radar, r = "Hodnota", theta = "Odvetvie", line_close= True, color= "Pohlavie", color_discrete_sequence=px.colors.qualitative.Pastel, hover_data="Hodnota", title="Počet nezamestnaných v odvetviach")
     radar_graph.update_traces(fill = "toself")
     radar_graph.update_polars(bgcolor="#0e0e0e")
     st.plotly_chart(radar_graph, use_container_width=True)
+
