@@ -12,10 +12,5 @@ secondaryBackgroundColor = "#4A4848"
 
 textColor = "#FFF6ED"
 
-#font = "sans-serif"
-
-
-#tu poriesit farby pri slidery
-#https://docs.streamlit.io/develop/concepts/configuration/theming-customize-colors-and-borders#textcolor-and-linkcolor
 
 
