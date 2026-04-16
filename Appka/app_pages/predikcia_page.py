@@ -76,10 +76,10 @@ else:
 
         with st.expander("Porovnanie predikcie s reálnymi dátami"):
             if not pd.isna(real_next):
-                real_value_odvetvie = round(real_next, 2)
-                delta_odvetvie = round(predicted_value - real_value_odvetvie, 2)
+                real_value = round(real_next, 2)
+                delta = round(predicted_value - real_value, 2)
                 
-                st.metric(label=f"Predikovaná nezamestnanosť pre rok {next_year}", value=predicted_value, delta=f"{delta_odvetvie} oproti reálnej hodnote {real_value_odvetvie}", delta_color="inverse")
+                st.metric(label=f"Predikovaná nezamestnanosť pre rok {next_year}", value=predicted_value, delta=f"{real_value} oproti reálnej hodnote {delta}", delta_color="inverse")
             else:
                 st.metric(label=f"Predikovaná nezamestnanosť pre rok {next_year}", value=predicted_value)
                 st.info("Reálne dáta pre predikovaný rok nie sú k dispozícii")
@@ -126,7 +126,7 @@ else:
                 real_value_odvetvie = round(real_next_odvetvie, 2)
                 delta_odvetvie = round(predicted_value_odvetvie - real_value_odvetvie, 2)
                 
-                st.metric(label=f"Predikovaná nezamestnanosť pre rok {next_year_odvetvie}", value=predicted_value_odvetvie, delta=f"{delta_odvetvie} oproti reálnej hodnote {real_value_odvetvie}", delta_color="inverse")
+                st.metric(label=f"Predikovaná nezamestnanosť pre rok {next_year_odvetvie}", value=predicted_value_odvetvie, delta=f"{real_value_odvetvie} oproti reálnej hodnote {delta_odvetvie}", delta_color="inverse")
             else:
                 st.metric(label=f"Predikovaná nezamestnanosť pre rok {next_year_odvetvie}", value=predicted_value_odvetvie)
                 st.info("Reálne dáta pre predikovaný rok nie sú k dispozícii")
