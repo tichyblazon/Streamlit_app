@@ -52,7 +52,7 @@ filtered_df_odvetvie = df_odvetvie[
 
 #DATASET
 st.subheader("Predikcia nezamestnanosti pre prvý dataset")
-st.caption("Predikcia počtu nezamestnaných v tisícoch pre ďalší rok podľa zvolených filtrov")
+st.caption("Predikcia počtu nezamestnaných v tisícoch pre ďalší rok podľa regiónu, pohlavia, typu skupiny")
 
 if filtered_df.empty:
     st.warning("Žiadne dáta pre zvolené filtre")
