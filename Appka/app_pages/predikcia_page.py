@@ -2,9 +2,11 @@ import streamlit as st
 import pandas as pd
 import plotly.express as px
 from pmdarima import auto_arima
-
-df = pd.read_csv("dataset.csv")
-df_odvetvie = pd.read_csv("dataset_odvetvie.csv")
+import os
+#DATASETY
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+df = pd.read_csv(os.path.join(BASE_DIR, "..", "dataset.csv"))
+df_odvetvie = pd.read_csv(os.path.join(BASE_DIR, "..", "dataset_odvetvie.csv"))
 
 df_melted = df.melt(id_vars=["region", "pohlavie", "typ_skupiny", "skupina"], var_name="rok", value_name="nezamestnanost")
 df_melted["rok"] = df_melted["rok"].astype(int)
