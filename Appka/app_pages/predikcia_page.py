@@ -2,11 +2,9 @@ import streamlit as st
 import pandas as pd
 import plotly.express as px
 from pmdarima import auto_arima
-import os
 
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-df = pd.read_csv(os.path.join(BASE_DIR, "..", "dataset.csv"))
-df_odvetvie = pd.read_csv(os.path.join(BASE_DIR, "..", "dataset_odvetvie.csv"))
+df = pd.read_csv("dataset.csv")
+df_odvetvie = pd.read_csv("dataset_odvetvie.csv")
 
 df_melted = df.melt(id_vars=["region", "pohlavie", "typ_skupiny", "skupina"], var_name="rok", value_name="nezamestnanost")
 df_melted["rok"] = df_melted["rok"].astype(int)
@@ -50,9 +48,9 @@ filtered_df_odvetvie = df_odvetvie[
     (df_odvetvie["Rok"].between(selected_roky_odvetvie[0], selected_roky_odvetvie[1]))
 ]
 
-#DATASET
+# DATASET 1
 st.subheader("Predikcia nezamestnanosti pre prvý dataset")
-st.caption("Predikcia počtu nezamestnaných v tisícoch pre ďalší rok podľa regiónu, pohlavia, typu skupiny")
+st.caption("Predikcia počtu nezamestnaných v tisícoch pre ďalší rok podľa zvolených filtrov")
 
 if filtered_df.empty:
     st.warning("Žiadne dáta pre zvolené filtre")
@@ -69,22 +67,22 @@ else:
             next_year = selected_roky[1] + 1
             predicted_value = round(prediction.iloc[0], 2)
 
-        real_next = df_odvetvie[
-            (df_odvetvie["Pohlavie"].isin(selected_pohlavie_odvetvie)) &
-            (df_odvetvie["Odvetvie"].isin(selected_odvetvie)) &
-            (df_odvetvie["Rok"] == next_year)]["Hodnota"].mean()
+        # ✅ OPRAVENÉ: porovnávame s df_melted, nie df_odvetvie
+        real_next = df_melted[
+            (df_melted["region"].isin(selected_region)) &
+            (df_melted["pohlavie"].isin(selected_pohlavie)) &
+            (df_melted["skupina"].isin(selected_skupina)) &
+            (df_melted["rok"] == next_year)]["nezamestnanost"].mean()
 
         with st.expander("Porovnanie predikcie s reálnymi dátami"):
             if not pd.isna(real_next):
                 real_value = round(real_next, 2)
                 delta = round(predicted_value - real_value, 2)
-                
-                st.metric(label=f"Predikovaná nezamestnanosť pre rok {next_year}", value=predicted_value, delta=f"{real_value} oproti reálnej hodnote {delta}", delta_color="inverse")
+                st.metric(label=f"Predikovaná nezamestnanosť pre rok {next_year}", value=predicted_value, delta=f"{delta} oproti reálnej hodnote {real_value}", delta_color="inverse")
             else:
                 st.metric(label=f"Predikovaná nezamestnanosť pre rok {next_year}", value=predicted_value)
                 st.info("Reálne dáta pre predikovaný rok nie sú k dispozícii")
 
-        #Graf predikcie
         df_prediction = pd.DataFrame({
             "rok": list(agg_df["rok"]) + [next_year],
             "nezamestnanost": list(agg_df["nezamestnanost"]) + [predicted_value],
@@ -94,10 +92,9 @@ else:
         line_pred.update_layout(xaxis_title="Rok", yaxis_title="Počet nezamestnaných v tisícoch", xaxis=dict(dtick=1, tickformat="d"))
         st.plotly_chart(line_pred, use_container_width=True)
 
-
 st.divider()
 
-#DATASET 2
+# DATASET 2
 st.subheader("Predikcia nezamestnanosti pre druhý dataset")
 st.caption("Predikcia počtu nezamestnaných v tisícoch pre ďalší rok podľa odvetvia")
 
@@ -125,13 +122,11 @@ else:
             if not pd.isna(real_next_odvetvie):
                 real_value_odvetvie = round(real_next_odvetvie, 2)
                 delta_odvetvie = round(predicted_value_odvetvie - real_value_odvetvie, 2)
-                
-                st.metric(label=f"Predikovaná nezamestnanosť pre rok {next_year_odvetvie}", value=predicted_value_odvetvie, delta=f"{real_value_odvetvie} oproti reálnej hodnote {delta_odvetvie}", delta_color="inverse")
+                st.metric(label=f"Predikovaná nezamestnanosť pre rok {next_year_odvetvie}", value=predicted_value_odvetvie, delta=f"{delta_odvetvie} oproti reálnej hodnote {real_value_odvetvie}", delta_color="inverse")
             else:
                 st.metric(label=f"Predikovaná nezamestnanosť pre rok {next_year_odvetvie}", value=predicted_value_odvetvie)
                 st.info("Reálne dáta pre predikovaný rok nie sú k dispozícii")
 
-        # Graf s predikciou
     df_prediction_odvetvie = pd.DataFrame({
         "Rok": list(agg_df_odvetvie["Rok"]) + [next_year_odvetvie],
         "Hodnota": list(agg_df_odvetvie["Hodnota"]) + [predicted_value_odvetvie],
