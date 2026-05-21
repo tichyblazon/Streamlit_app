@@ -4,6 +4,7 @@ import pandas as pd
 import plotly.express as px
 import os
 
+#setup stranky
 st.set_page_config(page_title="Analýza trhu práce SK", page_icon="📈", layout="wide", initial_sidebar_state="collapsed")
 
 st.title("Analýza Nezamestnanosti na Slovensku")
