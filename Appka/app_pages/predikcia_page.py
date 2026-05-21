@@ -57,25 +57,29 @@ st.caption("Predikcia počtu nezamestnaných v tisícoch pre ďalší rok podľa
 if filtered_df.empty:
     st.warning("Žiadne dáta pre zvolené filtre")
 else:
+    #zoskupenie dat podla roku a priemernej nezamestnanosti + nastavenie casoveho radu
     agg_df = filtered_df.groupby("rok", as_index=False)["nezamestnanost"].mean()
     ts = agg_df.set_index("rok")["nezamestnanost"]
 
+    #kontrola poctu dat
     if len(ts) < 5:
         st.warning("Pre predikciu potrebuješ aspoň 5 rokov dát")
     else:
-        with st.spinner("Počítam predikciu..."):
+        with st.spinner("Počítam predikciu"):
+            #vytvorenie modelu auto-ARIMA
             model = auto_arima(ts, seasonal=False, trace=False, error_action="ignore", suppress_warnings=True)
             prediction = model.predict(n_periods=1)
             next_year = selected_roky[1] + 1
             predicted_value = round(prediction.iloc[0], 2)
 
-        # ✅ OPRAVENÉ: porovnávame s df_melted, nie df_odvetvie
+        #hladanie realnych dat pre nasledujuci rok
         real_next = df_melted[
             (df_melted["region"].isin(selected_region)) &
             (df_melted["pohlavie"].isin(selected_pohlavie)) &
             (df_melted["skupina"].isin(selected_skupina)) &
             (df_melted["rok"] == next_year)]["nezamestnanost"].mean()
 
+        #porovnanie predikcie a reality + zobrazenie metriky
         with st.expander("Porovnanie predikcie s reálnymi dátami"):
             if not pd.isna(real_next):
                 real_value = round(real_next, 2)
@@ -84,12 +88,13 @@ else:
             else:
                 st.metric(label=f"Predikovaná nezamestnanosť pre rok {next_year}", value=predicted_value)
                 st.info("Reálne dáta pre predikovaný rok nie sú k dispozícii")
-
+        #dataframe pre graf
         df_prediction = pd.DataFrame({
             "rok": list(agg_df["rok"]) + [next_year],
             "nezamestnanost": list(agg_df["nezamestnanost"]) + [predicted_value],
             "Dáta": ["Reálne"] * len(agg_df) + ["Predikcia"]})
 
+        #ciarovy graf
         line_pred = px.line(df_prediction, x="rok", y="nezamestnanost", color="Dáta", markers=True, title=f"Predikcia nezamestnanosti pre rok {next_year}", color_discrete_map={"Reálne": "#2EC4B6", "Predikcia": "#FFE066"})
         line_pred.update_layout(xaxis_title="Rok", yaxis_title="Počet nezamestnaných v tisícoch", xaxis=dict(dtick=1, tickformat="d"))
         st.plotly_chart(line_pred, use_container_width=True)
@@ -103,23 +108,28 @@ st.caption("Predikcia počtu nezamestnaných v tisícoch pre ďalší rok podľa
 if filtered_df_odvetvie.empty:
     st.warning("Žiadne dáta pre zvolené filtre")
 else:
+    #zoskupenie dat podla roku a priemernej nezamestnanosti + nastavenie casoveho radu
     agg_df_odvetvie = filtered_df_odvetvie.groupby("Rok", as_index=False)["Hodnota"].mean()
     ts_odvetvie = agg_df_odvetvie.set_index("Rok")["Hodnota"].dropna()
 
+    #kontrola poctu dat
     if len(ts_odvetvie) < 5:
         st.warning("Pre predikciu potrebuješ aspoň 5 rokov dát")
     else:
-        with st.spinner("Počítam predikciu..."):
+        with st.spinner("Počítam predikciu"):
+            #vytvorenie modelu auto-ARIMA
             model_odvetvie = auto_arima(ts_odvetvie, seasonal=False, trace=False, error_action="ignore", suppress_warnings=True)
             prediction_odvetvie = model_odvetvie.predict(n_periods=1)
             next_year_odvetvie = selected_roky_odvetvie[1] + 1
             predicted_value_odvetvie = round(prediction_odvetvie.iloc[0], 2)
 
+        #hladanie realnych dat pre nalsedujuci rok
         real_next_odvetvie = df_odvetvie[
             (df_odvetvie["Pohlavie"].isin(selected_pohlavie_odvetvie)) &
             (df_odvetvie["Odvetvie"].isin(selected_odvetvie)) &
             (df_odvetvie["Rok"] == next_year_odvetvie)]["Hodnota"].mean()
 
+        #porovnanie predikcie a reality + zobrazenie metriky
         with st.expander("Porovnanie predikcie s reálnymi dátami"):
             if not pd.isna(real_next_odvetvie):
                 real_value_odvetvie = round(real_next_odvetvie, 2)
@@ -128,12 +138,14 @@ else:
             else:
                 st.metric(label=f"Predikovaná nezamestnanosť pre rok {next_year_odvetvie}", value=predicted_value_odvetvie)
                 st.info("Reálne dáta pre predikovaný rok nie sú k dispozícii")
-
+                
+    #dataframe pre graf
     df_prediction_odvetvie = pd.DataFrame({
         "Rok": list(agg_df_odvetvie["Rok"]) + [next_year_odvetvie],
         "Hodnota": list(agg_df_odvetvie["Hodnota"]) + [predicted_value_odvetvie],
         "Dáta": ["Reálne"] * len(agg_df_odvetvie) + ["Predikcia"]})
 
+    #ciarovy graf
     line_pred_odvetvie = px.line(df_prediction_odvetvie, x="Rok", y="Hodnota", color="Dáta", markers=True, title=f"Predikcia nezamestnanosti podľa odvetvia pre rok {next_year_odvetvie}", color_discrete_map={"Reálne": "#2EC4B6", "Predikcia": "#FFE066"})
     line_pred_odvetvie.update_layout(xaxis_title="Rok", yaxis_title="Počet nezamestnaných v tisícoch", xaxis=dict(dtick=1, tickformat="d"))
     st.plotly_chart(line_pred_odvetvie, use_container_width=True)
